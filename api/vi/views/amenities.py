@@ -1,5 +1,9 @@
 #!/usr/bin/python3
-'''Contains the amenities view for the API.'''
+'''This module contains the routes and methods for handling the amenities
+endpoint of the API. It supports various HTTP methods to interact with
+amenity resources.
+'''
+
 from flask import jsonify, request
 from werkzeug.exceptions import NotFound, MethodNotAllowed, BadRequest
 
@@ -7,15 +11,29 @@ from api.v1.views import app_views
 from models import storage
 from models.amenity import Amenity
 
-
+# List of allowed HTTP methods for the amenities endpoint
 ALLOWED_METHODS = ['GET', 'DELETE', 'POST', 'PUT']
 '''Methods allowed for the amenities endpoint.'''
-
 
 @app_views.route('/amenities', methods=ALLOWED_METHODS)
 @app_views.route('/amenities/<amenity_id>', methods=ALLOWED_METHODS)
 def handle_amenities(amenity_id=None):
-    '''The method handler for the amenities endpoint.
+    '''Handles requests to the /amenities and /amenities/<amenity_id> endpoints.
+    
+    The behavior of this function depends on the HTTP method of the request:
+    - GET: Retrieves a list of all amenities or a specific amenity by id.
+    - DELETE: Deletes a specific amenity by id.
+    - POST: Creates a new amenity.
+    - PUT: Updates an existing amenity by id.
+
+    Args:
+        amenity_id (str, optional): The id of the amenity to operate on. Default is None.
+
+    Returns:
+        Response: JSON response with the status and data according to the operation performed.
+
+    Raises:
+        MethodNotAllowed: If the HTTP method is not allowed.
     '''
     handlers = {
         'GET': get_amenities,
@@ -30,7 +48,17 @@ def handle_amenities(amenity_id=None):
 
 
 def get_amenities(amenity_id=None):
-    '''Gets the amenity with the given id or all amenities.
+    '''Retrieves amenities. Can return either a list of all amenities or
+    a specific amenity by id.
+
+    Args:
+        amenity_id (str, optional): The id of the amenity to retrieve. Default is None.
+
+    Returns:
+        Response: JSON response with the amenity data or a list of all amenities.
+
+    Raises:
+        NotFound: If the amenity with the specified id is not found.
     '''
     all_amenities = storage.all(Amenity).values()
     if amenity_id:
@@ -43,7 +71,16 @@ def get_amenities(amenity_id=None):
 
 
 def remove_amenity(amenity_id=None):
-    '''Removes a amenity with the given id.
+    '''Deletes an amenity by id.
+
+    Args:
+        amenity_id (str): The id of the amenity to delete.
+
+    Returns:
+        Response: JSON response with a 200 status code indicating successful deletion.
+
+    Raises:
+        NotFound: If the amenity with the specified id is not found.
     '''
     all_amenities = storage.all(Amenity).values()
     res = list(filter(lambda x: x.id == amenity_id, all_amenities))
@@ -55,7 +92,16 @@ def remove_amenity(amenity_id=None):
 
 
 def add_amenity(amenity_id=None):
-    '''Adds a new amenity.
+    '''Creates a new amenity.
+
+    Args:
+        amenity_id (str, optional): This parameter is not used when adding a new amenity. Default is None.
+
+    Returns:
+        Response: JSON response with the created amenity data and a 201 status code.
+
+    Raises:
+        BadRequest: If the request body is not JSON or missing required fields.
     '''
     data = request.get_json()
     if type(data) is not dict:
@@ -68,7 +114,17 @@ def add_amenity(amenity_id=None):
 
 
 def update_amenity(amenity_id=None):
-    '''Updates the amenity with the given id.
+    '''Updates an existing amenity by id.
+
+    Args:
+        amenity_id (str): The id of the amenity to update.
+
+    Returns:
+        Response: JSON response with the updated amenity data and a 200 status code.
+
+    Raises:
+        NotFound: If the amenity with the specified id is not found.
+        BadRequest: If the request body is not JSON.
     '''
     xkeys = ('id', 'created_at', 'updated_at')
     all_amenities = storage.all(Amenity).values()
